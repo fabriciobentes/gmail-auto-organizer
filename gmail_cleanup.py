@@ -31,13 +31,16 @@ MONITORED_LABELS = [
     "Nubank",
     "Pinterest",
     "Shopee",
+    "Spotify",
     "Uber",
 ]
 
-# Regras para aplicar automaticamente os novos marcadores.
+# Regras para aplicar automaticamente os marcadores.
 # As mensagens novas continuam na Caixa de entrada; depois de lidas,
 # o mesmo workflow remove apenas o rotulo INBOX.
 AUTO_LABEL_RULES = {
+    "Anhanguera": "from:(anhanguera.com)",
+    "Google": "(from:(@google.com) OR from:(@accounts.google.com))",
     "MEI": (
         "(from:(meumeiassessoria.com.br) OR "
         "from:(meumeidigital.com.br) OR "
@@ -55,6 +58,7 @@ AUTO_LABEL_RULES = {
         "from:(notificationmail.microsoft.com))"
     ),
     "Pinterest": "from:(pinterest.com)",
+    "Spotify": "from:(@spotify.com)",
     "iFood + 99Food": (
         "(from:(ifood.com.br) OR "
         "from:(ifood-no-reply.com) OR "
