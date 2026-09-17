@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import sys
 from typing import Dict, List
 
@@ -40,9 +41,11 @@ MONITORED_LABELS = [
 ]
 
 # Regras para aplicar automaticamente os marcadores.
-# As mensagens novas continuam na Caixa de entrada; depois de lidas,
-# o mesmo workflow remove apenas o rotulo INBOX.
-AUTO_LABEL_RULES = {
+# A busca nao fica limitada ao INBOX: assim, mensagens antigas ou ja arquivadas
+# que ainda estejam sem o marcador tambem sao corrigidas.
+BASE_AUTO_LABEL_RULES = {
+    "99": "from:(99app.com)",
+    "Âmbar": "from:(ambarenergia-am.com.br)",
     "Anhanguera": (
         "(from:(anhanguera.com) OR "
         "from:(kroton.com.br) OR "
@@ -57,6 +60,7 @@ AUTO_LABEL_RULES = {
         "(from:(bradesco.com.br) OR "
         "from:(campanhasbradesco.com.br))"
     ),
+    "Banco PAN": "(from:(pan.com.vc) OR from:(pancartoes.com.br))",
     "Cadê meu ônibus?": (
         "(from:(sinetram.com.br) OR "
         "from:(prodatamobility.com.br))"
@@ -66,14 +70,30 @@ AUTO_LABEL_RULES = {
         "from:(mail.openai.com) OR "
         "from:(tm.openai.com))"
     ),
-    "Google": "(from:(@google.com) OR from:(@accounts.google.com))",
+    "Claro": "(from:(claro.com.br) OR from:(minhaclaro.com.br))",
+    "GitHub": "from:(github.com)",
+    "Google": "from:(google.com)",
+    "Gov": "from:(gov.br)",
+    "IFAM": (
+        "(from:(ifam.edu.br) OR to:(ifam.edu.br) OR "
+        "subject:(PCCT) OR subject:(PPCT))"
+    ),
+    "Instagram": "from:(instagram.com)",
+    "iFood + 99Food": (
+        "(from:(ifood.com.br) OR "
+        "from:(ifood-no-reply.com) OR "
+        "from:(99food@br.didiglobal.com) OR "
+        "from:(99food@mkt-br.didiglobal.com))"
+    ),
+    "Linkedin": "from:(linkedin.com)",
     "MEI": (
         "(from:(meumeiassessoria.com.br) OR "
         "from:(meumeidigital.com.br) OR "
         "from:(meiportalmicroempreendedor.com.br) OR "
         "from:(maismei.com.br))"
     ),
-    "Instagram": "from:(mail.instagram.com)",
+    "Mercado Livre": "(from:(mercadolivre.com.br) OR from:(mercadolivre.com))",
+    "Mercado Pago": "(from:(mercadopago.com.br) OR from:(mercadopago.com))",
     "Microsoft": (
         "(from:(microsoft.com) OR "
         "from:(accountprotection.microsoft.com) OR "
@@ -83,16 +103,43 @@ AUTO_LABEL_RULES = {
         "from:(infomail.microsoft.com) OR "
         "from:(notificationmail.microsoft.com))"
     ),
+    "Motorola": "(from:(motorola-mail.com) OR from:(motorola.com))",
+    "Netflix": "from:(netflix.com)",
+    "Nubank": "from:(nubank.com.br)",
     "Pinterest": "from:(pinterest.com)",
     "Santander": "from:(santander.com.br)",
-    "Spotify": "from:(@spotify.com)",
-    "iFood + 99Food": (
-        "(from:(ifood.com.br) OR "
-        "from:(ifood-no-reply.com) OR "
-        "from:(99food@br.didiglobal.com) OR "
-        "from:(99food@mkt-br.didiglobal.com))"
-    ),
+    "Shopee": "from:(shopee.com.br)",
+    "Spotify": "from:(spotify.com)",
+    "Uber": "from:(uber.com)",
 }
+
+
+def format_cnpj(cnpj: str) -> str:
+    digits = re.sub(r"\D", "", cnpj)
+    if len(digits) != 14:
+        return ""
+    return (
+        f"{digits[0:2]}.{digits[2:5]}.{digits[5:8]}/"
+        f"{digits[8:12]}-{digits[12:14]}"
+    )
+
+
+def get_auto_label_rules() -> Dict[str, str]:
+    rules = dict(BASE_AUTO_LABEL_RULES)
+
+    # O CNPJ fica em um secret do GitHub, nao no repositorio publico.
+    cnpj_raw = os.getenv("MEI_CNPJ", "").strip()
+    cnpj_digits = re.sub(r"\D", "", cnpj_raw)
+    cnpj_formatted = format_cnpj(cnpj_raw)
+
+    if len(cnpj_digits) == 14 and cnpj_formatted:
+        rules["MEI"] = (
+            f'({rules["MEI"]} OR '
+            f'"{cnpj_digits}" OR '
+            f'"{cnpj_formatted}")'
+        )
+
+    return rules
 
 
 def load_credentials() -> Credentials:
@@ -178,18 +225,20 @@ def main() -> int:
     credentials = load_credentials()
     service = build("gmail", "v1", credentials=credentials, cache_discovery=False)
     label_map = get_label_map(service)
+    auto_label_rules = get_auto_label_rules()
 
     missing = [name for name in MONITORED_LABELS if name not in label_map]
     if missing:
         print("Marcadores ausentes no Gmail:", ", ".join(missing))
 
     labeled_total = 0
-    for label_name, sender_query in AUTO_LABEL_RULES.items():
+    for label_name, matching_query in auto_label_rules.items():
         label_id = label_map.get(label_name)
         if not label_id:
             continue
 
-        query = f'in:inbox -label:"{label_name}" {sender_query}'
+        # Corrige tambem mensagens antigas/arquivadas ainda sem o marcador.
+        query = f'-in:trash -in:spam -label:"{label_name}" {matching_query}'
         message_ids = list_matching_message_ids(service, query)
         if not message_ids:
             continue
@@ -204,9 +253,8 @@ def main() -> int:
         if label_name not in label_map:
             continue
 
-        # INBOX = ainda está na Caixa de entrada
-        # -is:unread = já foi lida
-        # label:"..." = pertence ao marcador correspondente
+        # Mantem nao lidas na Caixa de entrada. Quando forem lidas,
+        # remove somente INBOX e preserva o marcador correspondente.
         query = f'in:inbox -is:unread label:"{label_name}"'
         message_ids = list_matching_message_ids(service, query)
 
