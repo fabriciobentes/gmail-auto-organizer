@@ -39,7 +39,7 @@ MONITORED_LABELS = [
 # As mensagens novas continuam na Caixa de entrada; depois de lidas,
 # o mesmo workflow remove apenas o rotulo INBOX.
 AUTO_LABEL_RULES = {
-    "Anhanguera": "from:(anhanguera.com)",
+    "Anhanguera": "(from:(anhanguera.com) OR from:(kroton.com.br))",
     "Google": "(from:(@google.com) OR from:(@accounts.google.com))",
     "MEI": (
         "(from:(meumeiassessoria.com.br) OR "
