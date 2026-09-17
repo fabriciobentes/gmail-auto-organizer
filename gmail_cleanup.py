@@ -19,15 +19,49 @@ MONITORED_LABELS = [
     "Google",
     "Gov",
     "IFAM",
+    "Instagram",
+    "iFood + 99Food",
     "Linkedin",
+    "MEI",
     "Mercado Livre",
     "Mercado Pago",
+    "Microsoft",
     "Motorola",
     "Netflix",
     "Nubank",
+    "Pinterest",
     "Shopee",
     "Uber",
 ]
+
+# Regras para aplicar automaticamente os novos marcadores.
+# As mensagens novas continuam na Caixa de entrada; depois de lidas,
+# o mesmo workflow remove apenas o rotulo INBOX.
+AUTO_LABEL_RULES = {
+    "MEI": (
+        "(from:(meumeiassessoria.com.br) OR "
+        "from:(meumeidigital.com.br) OR "
+        "from:(meiportalmicroempreendedor.com.br) OR "
+        "from:(maismei.com.br))"
+    ),
+    "Instagram": "from:(mail.instagram.com)",
+    "Microsoft": (
+        "(from:(microsoft.com) OR "
+        "from:(accountprotection.microsoft.com) OR "
+        "from:(communication.microsoft.com) OR "
+        "from:(notice.microsoft.com) OR "
+        "from:(notificationemails.microsoft.com) OR "
+        "from:(infomail.microsoft.com) OR "
+        "from:(notificationmail.microsoft.com))"
+    ),
+    "Pinterest": "from:(pinterest.com)",
+    "iFood + 99Food": (
+        "(from:(ifood.com.br) OR "
+        "from:(ifood-no-reply.com) OR "
+        "from:(99food@br.didiglobal.com) OR "
+        "from:(99food@mkt-br.didiglobal.com))"
+    ),
+}
 
 
 def load_credentials() -> Credentials:
@@ -63,6 +97,28 @@ def list_matching_message_ids(service, query: str) -> List[str]:
     return ids
 
 
+def add_label_to_messages(service, message_ids: List[str], label_id: str, dry_run: bool) -> int:
+    if not message_ids:
+        return 0
+
+    if dry_run:
+        return len(message_ids)
+
+    for start in range(0, len(message_ids), 1000):
+        chunk = message_ids[start : start + 1000]
+        (
+            service.users()
+            .messages()
+            .batchModify(
+                userId="me",
+                body={"ids": chunk, "addLabelIds": [label_id]},
+            )
+            .execute()
+        )
+
+    return len(message_ids)
+
+
 def archive_messages(service, message_ids: List[str], dry_run: bool) -> int:
     if not message_ids:
         return 0
@@ -96,7 +152,23 @@ def main() -> int:
     if missing:
         print("Marcadores ausentes no Gmail:", ", ".join(missing))
 
-    total = 0
+    labeled_total = 0
+    for label_name, sender_query in AUTO_LABEL_RULES.items():
+        label_id = label_map.get(label_name)
+        if not label_id:
+            continue
+
+        query = f'in:inbox -label:"{label_name}" {sender_query}'
+        message_ids = list_matching_message_ids(service, query)
+        if not message_ids:
+            continue
+
+        count = add_label_to_messages(service, message_ids, label_id, dry_run=dry_run)
+        labeled_total += count
+        action = "receberiam o marcador" if dry_run else "receberam o marcador"
+        print(f"{label_name}: {count} mensagem(ns) {action}.")
+
+    archived_total = 0
     for label_name in MONITORED_LABELS:
         if label_name not in label_map:
             continue
@@ -111,12 +183,15 @@ def main() -> int:
             continue
 
         count = archive_messages(service, message_ids, dry_run=dry_run)
-        total += count
+        archived_total += count
         action = "seriam arquivadas" if dry_run else "arquivadas"
         print(f"{label_name}: {count} mensagem(ns) {action}.")
 
     mode = "DRY RUN" if dry_run else "EXECUÇÃO REAL"
-    print(f"{mode}: total processado = {total} mensagem(ns).")
+    print(
+        f"{mode}: marcadores aplicados = {labeled_total}; "
+        f"mensagens arquivadas = {archived_total}."
+    )
     return 0
 
 
