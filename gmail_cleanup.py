@@ -12,7 +12,10 @@ MONITORED_LABELS = [
     "99",
     "Âmbar",
     "Anhanguera",
+    "Banco Brasil",
+    "Banco Bradesco",
     "Banco PAN",
+    "Cadê meu ônibus?",
     "ChatGPT",
     "Claro",
     "GitHub",
@@ -30,6 +33,7 @@ MONITORED_LABELS = [
     "Netflix",
     "Nubank",
     "Pinterest",
+    "Santander",
     "Shopee",
     "Spotify",
     "Uber",
@@ -40,6 +44,21 @@ MONITORED_LABELS = [
 # o mesmo workflow remove apenas o rotulo INBOX.
 AUTO_LABEL_RULES = {
     "Anhanguera": "(from:(anhanguera.com) OR from:(kroton.com.br))",
+    "Banco Brasil": (
+        "(from:(bb.com.br) OR "
+        "from:(bancodobrasil.com.br) OR "
+        "from:(bancobrasil.com.br))"
+    ),
+    "Banco Bradesco": (
+        "(from:(bradesco.com.br) OR "
+        "from:(campanhasbradesco.com.br))"
+    ),
+    "Cadê meu ônibus?": "from:(sinetram.com.br)",
+    "ChatGPT": (
+        "(from:(openai.com) OR "
+        "from:(mail.openai.com) OR "
+        "from:(tm.openai.com))"
+    ),
     "Google": "(from:(@google.com) OR from:(@accounts.google.com))",
     "MEI": (
         "(from:(meumeiassessoria.com.br) OR "
@@ -58,6 +77,7 @@ AUTO_LABEL_RULES = {
         "from:(notificationmail.microsoft.com))"
     ),
     "Pinterest": "from:(pinterest.com)",
+    "Santander": "from:(santander.com.br)",
     "Spotify": "from:(@spotify.com)",
     "iFood + 99Food": (
         "(from:(ifood.com.br) OR "
