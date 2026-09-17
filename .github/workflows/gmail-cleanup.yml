@@ -39,6 +39,5 @@ jobs:
       - name: Arquivar mensagens lidas
         env:
           GMAIL_TOKEN_JSON: ${{ secrets.GMAIL_TOKEN_JSON }}
-          MEI_CNPJ: ${{ secrets.MEI_CNPJ }}
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
         run: python gmail_cleanup.py
