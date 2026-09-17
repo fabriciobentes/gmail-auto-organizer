@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gmail Auto Organizer</title>
+  <meta name="description" content="Automação pessoal para arquivar mensagens lidas do Gmail mantendo seus marcadores.">
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:760px;margin:48px auto;padding:0 20px;line-height:1.6;color:#1f2328}
+    h1,h2{line-height:1.25} code{background:#f3f4f6;padding:2px 5px;border-radius:4px} a{color:#0969da}
+  </style>
+</head>
+<body>
+  <h1>Gmail Auto Organizer</h1>
+  <p>Gmail Auto Organizer é uma automação de uso pessoal que mantém a Caixa de entrada organizada. Ela identifica mensagens que já foram lidas e que pertencem a marcadores previamente definidos e remove somente o rótulo <code>INBOX</code>, arquivando essas mensagens sem apagá-las.</p>
+
+  <h2>Como funciona</h2>
+  <p>A automação é executada periodicamente pelo GitHub Actions e usa a Gmail API com autorização OAuth concedida pelo próprio titular da conta. As mensagens continuam disponíveis em seus marcadores correspondentes.</p>
+
+  <p>A automação não exclui mensagens, não envia mensagens para a Lixeira e não remove os marcadores existentes.</p>
+
+  <h2>Uso de dados do Google</h2>
+  <p>O aplicativo usa o acesso ao Gmail exclusivamente para localizar mensagens que atendam às regras de organização e para remover o rótulo da Caixa de entrada. Ele não lê nem armazena o conteúdo dos e-mails ou anexos para outras finalidades.</p>
+
+  <p><a href="privacy.html">Política de Privacidade</a></p>
+</body>
+</html>
