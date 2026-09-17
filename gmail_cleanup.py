@@ -8,6 +8,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.modify"]
+CNPJ_PATTERN = re.compile(r"\b\d{2}\.?\d{3}\.?\d{3}/?\d{4}-?\d{2}\b")
 
 MONITORED_LABELS = [
     "99",
@@ -114,29 +115,68 @@ BASE_AUTO_LABEL_RULES = {
 }
 
 
-def format_cnpj(cnpj: str) -> str:
-    digits = re.sub(r"\D", "", cnpj)
-    if len(digits) != 14:
+def normalize_cnpj(value: str) -> str:
+    digits = re.sub(r"\D", "", value)
+    return digits if len(digits) == 14 else ""
+
+
+def format_cnpj(cnpj_digits: str) -> str:
+    if len(cnpj_digits) != 14:
         return ""
     return (
-        f"{digits[0:2]}.{digits[2:5]}.{digits[5:8]}/"
-        f"{digits[8:12]}-{digits[12:14]}"
+        f"{cnpj_digits[0:2]}.{cnpj_digits[2:5]}.{cnpj_digits[5:8]}/"
+        f"{cnpj_digits[8:12]}-{cnpj_digits[12:14]}"
     )
 
 
-def get_auto_label_rules() -> Dict[str, str]:
+def format_cnpj_root(cnpj_digits: str) -> str:
+    if len(cnpj_digits) != 14:
+        return ""
+    return f"{cnpj_digits[0:2]}.{cnpj_digits[2:5]}.{cnpj_digits[5:8]}"
+
+
+def discover_mei_cnpj(service) -> str:
+    # Descobre o CNPJ a partir de mensagens de um remetente MEI ja conhecido.
+    # O numero fica somente em memoria e nunca e gravado no repositorio ou nos logs.
+    response = (
+        service.users()
+        .messages()
+        .list(
+            userId="me",
+            q="-in:trash -in:spam from:(meumeiassessoria.com.br)",
+            maxResults=10,
+        )
+        .execute()
+    )
+
+    for item in response.get("messages", []):
+        message = (
+            service.users()
+            .messages()
+            .get(userId="me", id=item["id"], format="metadata")
+            .execute()
+        )
+        snippet = message.get("snippet", "")
+        for match in CNPJ_PATTERN.findall(snippet):
+            digits = normalize_cnpj(match)
+            if digits:
+                return digits
+
+    return ""
+
+
+def get_auto_label_rules(service) -> Dict[str, str]:
     rules = dict(BASE_AUTO_LABEL_RULES)
+    cnpj_digits = discover_mei_cnpj(service)
 
-    # O CNPJ fica em um secret do GitHub, nao no repositorio publico.
-    cnpj_raw = os.getenv("MEI_CNPJ", "").strip()
-    cnpj_digits = re.sub(r"\D", "", cnpj_raw)
-    cnpj_formatted = format_cnpj(cnpj_raw)
-
-    if len(cnpj_digits) == 14 and cnpj_formatted:
+    if cnpj_digits:
+        cnpj_formatted = format_cnpj(cnpj_digits)
+        cnpj_root = format_cnpj_root(cnpj_digits)
         rules["MEI"] = (
             f'({rules["MEI"]} OR '
             f'"{cnpj_digits}" OR '
-            f'"{cnpj_formatted}")'
+            f'"{cnpj_formatted}" OR '
+            f'"{cnpj_root}")'
         )
 
     return rules
@@ -225,7 +265,7 @@ def main() -> int:
     credentials = load_credentials()
     service = build("gmail", "v1", credentials=credentials, cache_discovery=False)
     label_map = get_label_map(service)
-    auto_label_rules = get_auto_label_rules()
+    auto_label_rules = get_auto_label_rules(service)
 
     missing = [name for name in MONITORED_LABELS if name not in label_map]
     if missing:
