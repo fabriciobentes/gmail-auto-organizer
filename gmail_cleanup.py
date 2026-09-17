@@ -57,7 +57,10 @@ AUTO_LABEL_RULES = {
         "(from:(bradesco.com.br) OR "
         "from:(campanhasbradesco.com.br))"
     ),
-    "Cadê meu ônibus?": "from:(sinetram.com.br)",
+    "Cadê meu ônibus?": (
+        "(from:(sinetram.com.br) OR "
+        "from:(prodatamobility.com.br))"
+    ),
     "ChatGPT": (
         "(from:(openai.com) OR "
         "from:(mail.openai.com) OR "
