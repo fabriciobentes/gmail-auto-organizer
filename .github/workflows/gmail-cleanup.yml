@@ -2,7 +2,9 @@ name: Gmail - Arquivar mensagens lidas
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    # Mantem o intervalo de 5 minutos, mas evita o inicio exato da hora,
+    # quando o GitHub Actions costuma ter maior carga.
+    - cron: "3-58/5 * * * *"
   workflow_dispatch:
     inputs:
       dry_run:
