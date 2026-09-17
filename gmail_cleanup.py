@@ -12,15 +12,21 @@ CNPJ_PATTERN = re.compile(r"\b\d{2}\.?\d{3}\.?\d{3}/?\d{4}-?\d{2}\b")
 
 MONITORED_LABELS = [
     "99",
+    "Amazon",
     "Âmbar",
     "Anhanguera",
     "Banco Brasil",
     "Banco Bradesco",
     "Banco PAN",
     "Cadê meu ônibus?",
+    "Certificado Digital",
     "ChatGPT",
     "Claro",
+    "Concursos e Vagas",
+    "Cursos e Capacitação",
+    "Docker",
     "GitHub",
+    "Globo",
     "Google",
     "Gov",
     "IFAM",
@@ -33,13 +39,17 @@ MONITORED_LABELS = [
     "Microsoft",
     "Motorola",
     "Netflix",
+    "Notion",
     "Nubank",
     "Pinterest",
     "Samsung",
     "Santander",
     "Shopee",
     "Spotify",
+    "Truedata",
     "Uber",
+    "YouCine",
+    "YouTube",
 ]
 
 # Regras para aplicar automaticamente os marcadores.
@@ -47,6 +57,7 @@ MONITORED_LABELS = [
 # que ainda estejam sem o marcador tambem sao corrigidas.
 BASE_AUTO_LABEL_RULES = {
     "99": "from:(99app.com)",
+    "Amazon": "(from:(amazon.com) OR from:(amazon.com.br))",
     "Âmbar": "from:(ambarenergia-am.com.br)",
     "Anhanguera": (
         "(from:(anhanguera.com) OR "
@@ -67,13 +78,38 @@ BASE_AUTO_LABEL_RULES = {
         "(from:(sinetram.com.br) OR "
         "from:(prodatamobility.com.br))"
     ),
+    "Certificado Digital": (
+        "(from:(soluti.com.br) OR "
+        "from:(gfsis.com.br) OR "
+        "subject:(\"Certificado Digital\"))"
+    ),
     "ChatGPT": (
-        "(from:(openai.com) OR "
+        "((from:(openai.com) OR "
         "from:(mail.openai.com) OR "
-        "from:(tm.openai.com))"
+        "from:(tm.openai.com)) OR "
+        "(from:(ebanx.com) subject:(OpenAI)))"
     ),
     "Claro": "(from:(claro.com.br) OR from:(minhaclaro.com.br))",
+    "Concursos e Vagas": (
+        "(from:(fgv.br) OR "
+        "from:(ibfc.com.br) OR "
+        "from:(institutoconsulplan.org.br) OR "
+        "from:(indeed.com) OR "
+        "from:(recrutei-mail.com.br))"
+    ),
+    "Cursos e Capacitação": (
+        "(from:(netacad.com) OR "
+        "from:(devtitans@icomp.ufam.edu.br) OR "
+        "from:(intelbras-info.com) OR "
+        "from:(passeidireto.com) OR "
+        "from:(descomplica.com.br))"
+    ),
+    "Docker": "from:(docker.com)",
     "GitHub": "from:(github.com)",
+    "Globo": (
+        "(from:(cadastro@globo.com) OR "
+        "from:(mkt.cartolafc.globo.com))"
+    ),
     "Google": "from:(google.com)",
     "Gov": "from:(gov.br)",
     "IFAM": (
@@ -92,7 +128,10 @@ BASE_AUTO_LABEL_RULES = {
         "(from:(meumeiassessoria.com.br) OR "
         "from:(meumeidigital.com.br) OR "
         "from:(meiportalmicroempreendedor.com.br) OR "
-        "from:(maismei.com.br))"
+        "from:(maismei.com.br) OR "
+        "from:(regularizacaomei.com.br) OR "
+        "subject:(MEI) OR "
+        "subject:(DAS-SIMEI))"
     ),
     "Mercado Livre": "(from:(mercadolivre.com.br) OR from:(mercadolivre.com))",
     "Mercado Pago": "(from:(mercadopago.com.br) OR from:(mercadopago.com))",
@@ -103,17 +142,31 @@ BASE_AUTO_LABEL_RULES = {
         "from:(notice.microsoft.com) OR "
         "from:(notificationemails.microsoft.com) OR "
         "from:(infomail.microsoft.com) OR "
-        "from:(notificationmail.microsoft.com))"
+        "from:(notificationmail.microsoft.com) OR "
+        "from:(onedrive.com) OR "
+        "from:(xbox.com))"
     ),
     "Motorola": "(from:(motorola-mail.com) OR from:(motorola.com))",
     "Netflix": "from:(netflix.com)",
+    "Notion": "from:(notion.so)",
     "Nubank": "from:(nubank.com.br)",
     "Pinterest": "from:(pinterest.com)",
     "Samsung": "(from:(samsung.com) OR from:(samsung-mail.com))",
-    "Santander": "from:(santander.com.br)",
+    "Santander": "(from:(santander.com.br) OR from:(santanderopenacademy.com))",
     "Shopee": "from:(shopee.com.br)",
     "Spotify": "from:(spotify.com)",
+    "Truedata": (
+        "(from:(truedata.com.br) OR "
+        "from:(noreply@merchantsupport.io) OR "
+        "from:(requests+truedata.com.br@judge.me))"
+    ),
     "Uber": "from:(uber.com)",
+    "YouCine": (
+        "(from:(em3451.thetl1.com) OR "
+        "from:(markmail.irmoal.com) OR "
+        "subject:(YouCine))"
+    ),
+    "YouTube": "from:(youtube.com)",
 }
 
 
