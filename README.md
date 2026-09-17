@@ -4,7 +4,7 @@ Automação pessoal para manter a Caixa de entrada limpa sem apagar mensagens im
 
 ## O que ela faz
 
-A cada 10 minutos, o GitHub Actions consulta o Gmail e procura mensagens que estejam:
+A cada 5 minutos, o GitHub Actions consulta o Gmail e procura mensagens que estejam:
 
 - na Caixa de entrada;
 - já lidas;
@@ -42,7 +42,7 @@ A lista pode ser alterada em `gmail_cleanup.py`.
 - `gmail_cleanup.py`: lógica principal da automação.
 - `oauth_setup.py`: assistente local para gerar a autorização OAuth do Gmail.
 - `requirements.txt`: dependências Python.
-- `.github/workflows/gmail-cleanup.yml`: execução automática a cada 10 minutos.
+- `.github/workflows/gmail-cleanup.yml`: execução automática a cada 5 minutos.
 
 ## Configuração do Gmail
 
@@ -79,10 +79,10 @@ Você pode executar com `dry_run=true` para apenas listar quantas mensagens seri
 O workflow está configurado para:
 
 ```cron
-*/10 * * * *
+*/5 * * * *
 ```
 
-Isso significa aproximadamente uma execução a cada 10 minutos. O GitHub pode atrasar alguns minutos uma execução agendada em períodos de alta carga.
+Isso significa aproximadamente uma execução a cada 5 minutos. O GitHub pode atrasar alguns minutos uma execução agendada em períodos de alta carga.
 
 ## Segurança
 
